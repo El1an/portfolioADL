@@ -1,0 +1,83 @@
+<div style="text-align: center;">
+<svg id="svg" width="500" height="300">
+		<defs>
+			<linearGradient id="textgradient" x1="0%" x2="0%" y1="0%" y2="100%">
+				<stop stop-color = "#ddd" offset = "0%"/>
+				<stop stop-color = "#FF00ee" offset = "100%"/>
+			</linearGradient>
+	<filter id="sofGlow" height="300%" width="300%" x="-75%" y="-75%">
+		<feMorphology operator="dilate" radius="4" in="SourceAlpha" result="thicken" />
+		<feGaussianBlur in="thicken" stdDeviation="10" result="blurred" />
+		<feFlood flood-color="rgb(0,186,255)" result="glowColor" />
+		<feComposite in="glowColor" in2="blurred" operator="in" result="softGlow_colored" />
+		<feMerge>
+			<feMergeNode in="softGlow_colored"/>
+			<feMergeNode in="SourceGraphic"/>
+		</feMerge>
+	</filter>
+</defs>
+  <path filter="url(#sofGlow)"  stroke="#000000" fill="none" stroke-width="5" id="kengaroo-svg" d="m 175.34824,149.86139 3.77976,3.02381 94.49405,97.51785 -42.33334,-83.15476 53.67262,-9.82738 -11.33928,17.38691 83.15476,-35.52976 27.97025,-4.53572 6.0476,-7.55952 -62.74404,-18.14286 11.33928,15.11905 -15.11905,0.75595 -71.05952,-36.285721 -51.40476,0.75595 L 64.223239,35.712572 205.58633,140.03401 Z"/>
+   <br> <span class="letter-changer">Ищем для вас выгодные предложения</span><span style="font-size: 60px; color: #007dff"  class="letter-changer-dot" id="1">.</span><span class="letter-changer-dot" id="2">.</span><span class="letter-changer-dot" id="3">.</span>
+	<style type="text/css">
+#svg {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+
+	animation-name: dash;
+	animation-duration: 5s;
+	animation-timing-function: linear;
+	animation-iteration-count: infinite;
+}
+@keyframes dash {
+  	to
+  	{
+    stroke-dashoffset: -1200;
+  	}
+}
+</style>
+</svg>
+</div>
+<style>
+	@keyframes changeLetter {
+		0% {
+			content: "";
+		}
+		25% {
+			content: ".";
+		}
+		50% {
+			content: "..";
+		}
+		100% {
+			content: "...";
+		}
+	}
+	.letter-changer
+     {
+         color: #111; font-family: ‘Open Sans’, sans-serif; font-size: 30px; font-weight: 300; line-height: 32px; margin: 0 0 72px; text-align: center;
+     }
+    .letter-changer-dot
+    {
+        color: black; font-family: ‘Open Sans’, sans-serif; font-size: 30px; font-weight: 300; line-height: 32px; margin: 0 0 72px; text-align: center;
+    }
+</style>
+<script>
+    var Dots = document.getElementsByClassName('letter-changer-dot');
+	i=2;
+    function dots()
+    {
+		for(j=0;j<3;j++) {
+			Dots[j].style.fontSize = '30px';
+			Dots[j].style.color = 'black';
+		}
+            document.getElementById(i+"").style.fontSize = '60px';
+			document.getElementById(i+"").style.color = '#007dff';
+				if(i==3) {
+					i = 1;
+				}
+				else {
+					i++;
+				}
+    }
+    setInterval(dots, 1000);
+</script>
