@@ -1,0 +1,283 @@
+1 Работу с данными, пришедшими в запросе из браузера (обработка GET/POST)
+-Пример отправки данных через ajax
+	document.forms['child-form'].onsubmit = function()
+{
+	$.ajax({
+		  type: "GET",
+  url: 'server.php',
+  data: {
+  id_child:this.id_child.value,
+		  	gr_id: this.gr_id.value,
+		  	name_child: this.name_child.value,
+		  	action: 'upd'
+  		},
+  success: function(data)
+   {
+ 
+document.getElementById('mydata').innerHTML=data;
+
+  } 
+			});
+	return false;
+};
+</script>
+-Файл server.php
+<?
+
+//Подключение к БД firebird
+$con = ibase_connect("localhost:C:\OSPanel\domains\detsad\DETSAD.FDB", "SYSDBA", "masterkey", "UTF-8");
+//Получение списка родителей
+function list_par()
+{
+    $string = "SELECT ID_PAR,NAME_PAR, NAME_CHILD, JOB_PAR, phone_par FROM PAR JOIN CHILD ON CHILD_ID=ID_CHILD";
+    
+    $result = ibase_query($con, $string);
+    $myrow  = ibase_fetch_assoc($result);
+    
+    echo "<thead>
+         
+    <tr>
+      <th scope=col>ФИО</th>
+      <th scope=col>ФИО ребенка</th>
+      <th scope=col>Работа</th>
+      <th scope=col>Телефон</th>
+      <th scope=col>Редактирование <button onclick=show_par('*') data-toggle=modal data-target=#par-modal type=button><img src='add.png' style='width: 32px'></button></th>
+      
+    </tr>
+
+  </thead><tbody>";
+    do {
+        
+        echo "<tr><td>$myrow[NAME_PAR]</td><td>$myrow[NAME_CHILD]</td><td>$myrow[JOB_PAR]</td><td>$myrow[PHONE_PAR]<td><button data-toggle=modal data-target=#par-modal type=button onclick=show_par($myrow[ID_PAR])><img src='edit.png' style='width: 32px'></button><button  type=button onclick=del_par($myrow[ID_PAR])><img src='x.png' style='width: 32px'></button></td></td>";
+    } while ($myrow = ibase_fetch_assoc($result));
+    
+}
+//Получение списка детей
+function list_child()
+{
+    $string = "select id_child,name_child, name_gr, LOT,(select first 1 par.name_par from par where par.child_id=c.id_child ) as par1,
+(select skip 1 par.name_par from par where par.child_id=c.id_child ) as par2
+  from child c join gr on gr.id_gr=c.gr_id";
+    // Запрос и вывод записей
+    $result = ibase_query($con, $string);
+    $myrow  = ibase_fetch_assoc($result);
+    do {
+        
+        echo "<tr><td>$myrow[NAME_CHILD]</td><td>$myrow[PAR1]</td><td>$myrow[PAR2]</td><td>$myrow[NAME_GR] </td><td><button onclick=get_child($myrow[ID_CHILD]) type=button data-toggle=modal data-target=#child-modal ><img src='edit.png' style='width: 32px'></button><button  type=button onclick=del_child($myrow[ID_CHILD])><img src='x.png' style='width: 32px'></button></td></tr>";
+    } while ($myrow = ibase_fetch_assoc($result));
+    
+}
+
+//Работа с таблицей PAR
+if (isset($_GET['id_par']) && isset($_GET['action'])) {
+    //Действие на удаление DELETE
+    if ($_GET['action'] == 'del') {
+        ibase_query($con, "DELETE FROM PAR WHERE ID_PAR=$_GET[id_par]");
+        list_par();
+    }
+    //Действие на обновление данных INSERT/UPDATE
+    if ($_GET['action'] == 'upd') {
+        if ($_GET[id_par] == '*') {
+            $string = "INSERT INTO PAR (NAME_PAR, JOB_PAR, PHONE_PAR, CHILD_ID) VALUES ('$_GET[name_par]', '$_GET[job_par]', '$_GET[phone_par]',$_GET[child_id])";
+        } else {
+            $string = "UPDATE PAR SET NAME_PAR='$_GET[name_par]', JOB_PAR='$_GET[job_par]', PHONE_PAR='$_GET[phone_par]', CHILD_ID=$_GET[child_id] WHERE ID_PAR=$_GET[id_par]";
+        }
+        ibase_query($con, $string);
+        list_par();
+    }
+    
+    
+    //Получение информации о родителе и детях родителя
+    if ($_GET['action'] == 'show') {
+        if ($_GET['id_par'] != '*') {
+            
+            $string = "SELECT * from PAR where ID_PAR=$_GET[id_par]";
+            $result = ibase_query($con, $string);
+            $myrow  = ibase_fetch_assoc($result);
+            echo "<input type=hidden value=$myrow[ID_PAR] name=id_par><label>ФИО: </label><input size=50 value=$myrow[NAME_PAR] type=text name=name_par><br>
+        <label>Телефон: </label><input size=50 value=$myrow[PHONE_PAR] type=text name=phone_par><br>
+        <label>Работа: </label><input size=50 value=$myrow[JOB_PAR] type=text name=job_par><br>
+        <label>Ребенок: </label>
+          <select name=child_id>";
+            $ch == $myrow[ID_CHILD];
+            $string = "SELECT * from CHILD";
+            $result = ibase_query($con, $string);
+            $myrow  = ibase_fetch_assoc($result);
+            do {
+                if ($ch == $myrow[ID_CHILD]) {
+                    echo "<option selected value=$myrow[ID_CHILD]>$myrow[NAME_CHILD]</option>";
+                } else {
+                    echo "<option value=$myrow[ID_CHILD]>$myrow[NAME_CHILD]</option>";
+                }
+                
+            } while ($myrow = ibase_fetch_assoc($result));
+            
+            echo "</select><br>
+        <button class='btn btn-success' type=submit>Применить</button>";
+        } else {
+            echo "<input size=50 type=hidden value='*' name=id_par><label>ФИО: </label><input size=50 type=text name=name_par><br>
+        <label>Телефон: </label><input size=50 type=text name=phone_par><br>
+        <label>Работа: </label><input size=50 type=text name=job_par><br>
+        <label>Ребенок: </label>
+          <select name=child_id>";
+            $string = "SELECT * from CHILD";
+            $result = ibase_query($con, $string);
+            $myrow  = ibase_fetch_assoc($result);
+            do {
+                echo "<option value=$myrow[ID_CHILD]>$myrow[NAME_CHILD]</option>";
+            } while ($myrow = ibase_fetch_assoc($result));
+            
+            echo "</select><br>
+        <button class='btn btn-success' type=submit>Добавить</button>";
+        }
+    }
+}
+//Работа с таблицей VACC
+if (isset($_GET['id_vacc']) && isset($_GET['action'])) {
+    if ($_GET['action'] == 'ins') {
+        $string = "INSERT INTO VACC (VAC_ID, CHILD_ID, DATE_VACC, END_VACC) VALUES ($_GET[id_vacc],$_GET[child_id], '$_GET[date_vacc]','$_GET[end_vacc]')";
+        ibase_query($con, $string);
+    }
+    if ($_GET['action'] == 'del') {
+        $string = "DELETE FROM VACC WHERE ID_VACC=$_GET[id_vacc]";
+        ibase_query($con, $string);
+    }
+    
+    $string = "SELECT ID_VACC,NAME_CHILD,DATE_VACC, END_VACC, NAME_VAC from vacc join vac ON ID_VAC=VAC_ID JOIN child ON child_id=ID_CHILD ORDER BY NAME_CHILD";
+    
+    $result = ibase_query($con, $string);
+    $myrow  = ibase_fetch_assoc($result);
+    
+    echo "<thead>
+         
+    <tr>
+      <th scope=col>Ребенок</th>
+      <th scope=col>Вакцина</th>
+      <th scope=col>Дата вакцинации</th>
+      <th scope=col>Дата окончания</th>
+      <th scope=col>Редактирование <button  type=button data-toggle=modal data-target=#vacc-modal><img src='add.png' style='width: 32px'></button></th>
+      
+    </tr>
+
+  </thead><tbody>";
+    do {
+        
+        
+        echo "<tr><td>$myrow[NAME_CHILD]</td><td>$myrow[NAME_VAC]</td><td>$myrow[DATE_VACC]</td><td>$myrow[END_VACC]<td><button  type=button onclick=del_vacc($myrow[ID_VACC])><img src='x.png' style='width: 32px'></button></td></td>";
+        
+        
+        
+    } while ($myrow = ibase_fetch_assoc($result));
+    
+}
+//Работа с таблицей CHILD
+if (isset($_GET['id_child']) && isset($_GET['action'])) {
+    if ($_GET['action'] == 'del') {
+        $string = "DELETE FROM CHILD WHERE ID_CHILD=$_GET[id_child]";
+        
+        ibase_query($con, $string);
+        list_child();
+    }
+    
+    if ($_GET['action'] == 'show') {
+        if ($_GET['id_child'] != '*') {
+            $string = "select id_child,name_child, name_gr,LOT ,GR_ID, LOT, (select first 1 par.name_par from par where par.child_id=c.id_child ) as par1,
+(select skip 1 par.name_par from par where par.child_id=c.id_child ) as par2
+  from child c join gr on gr.id_gr=c.gr_id where id_child=$_GET[id_child]";
+            $result = ibase_query($con, $string);
+            $myrow  = ibase_fetch_assoc($result);
+            echo "<input type=hidden name=id_child type=text value='$myrow[ID_CHILD]'>";
+            echo "<label>ФИО ребёнка: </lablel><input name=name_child size=30 type=text value='$myrow[NAME_CHILD]'><br>";
+            echo "<label>Родители: $myrow[PAR1], $myrow[PAR2]</lablel><br> ";
+            ECHO '<label>Группа пребывания: </lablel><select name=gr_id>';
+            $gr     = $myrow[GR_ID];
+            $ch     = $myrow[ID_CHILD];
+            //Информация о группах детей
+            $string = "select * from GR";
+            
+            $result = ibase_query($con, $string);
+            $myrow  = ibase_fetch_assoc($result);
+            do {
+                
+                if ($gr == $myrow[ID_GR])
+                    echo "<option selected value=$myrow[ID_GR]>$myrow[NAME_GR] ($myrow[LOT] детей)</option>";
+                else
+                    echo "<option value=$myrow[ID_GR]>$myrow[NAME_GR] ($myrow[LOT] детей)</option>";
+                
+                
+            } while ($myrow = ibase_fetch_assoc($result));
+            
+            ECHO '</select><br>';
+            //Информация о вакцинировании детей
+            $string = "SELECT DATE_VACC, END_VACC, NAME_VAC from vacc join vac ON ID_VAC=VAC_ID JOIN child ON child_id=ID_CHILD WHERE child_id=$ch";
+            
+            $result = ibase_query($con, $string);
+            $myrow  = ibase_fetch_assoc($result);
+            
+            echo "<TABLE class='table' style='background-color: #a8ffd2'>
+        
+         <thead>
+         
+    <tr>
+      <th scope=col>Вакцина</th>
+      <th scope=col>Дата вакцинации</th>
+      <th scope=col>Дата окончания</th>
+    </tr>
+
+  </thead><tbody>";
+            do {
+                
+                
+                echo "<tr><td>$myrow[NAME_VAC]</td><td>$myrow[DATE_VACC]</td><td>$myrow[END_VACC]</td>";
+                
+                
+                
+            } while ($myrow = ibase_fetch_assoc($result));
+            echo "</tbody><br><button class='btn btn-success' type=submit>Применить</button>";
+            
+            
+        } else {
+            echo "<input name=id_child type=hidden value='*'>";
+            echo "<label>ФИО ребёнка: </lablel><input name=name_child size=30 type=text value=''><br>";
+            
+            ECHO '<label>Группа пребывания: </lablel><select name=gr_id>';
+            
+            $string = "select * from GR";
+            // Запрос и вывод записей
+            $result = ibase_query($con, $string);
+            $myrow  = ibase_fetch_assoc($result);
+            do {
+                
+                
+                echo "<option value=$myrow[ID_GR]>$myrow[NAME_GR] ($myrow[LOT] детей)</option>";
+                
+                
+            } while ($myrow = ibase_fetch_assoc($result));
+            
+            ECHO '</select><br>';
+            echo "<button class='btn btn-success' type=submit>Применить</button>";
+            
+        }
+        
+    }
+    if ($_GET['action'] == 'upd') {
+        if ($_GET['id_child'] != '*') {
+            $string = "UPDATE child set NAME_CHILD='$_GET[name_child]', GR_ID=$_GET[gr_id] where id_child=$_GET[id_child]";
+            $result = ibase_query($con, $string);
+        } else {
+            
+            $string = "INSERT INTO CHILD (NAME_CHILD, GR_ID) VALUES ('$_GET[name_child]',$_GET[gr_id])";
+            $result = ibase_query($con, $string);
+        }
+        list_child();
+    }
+    
+    
+}
+?>
+2 Несколько sql-запросов
+
+3 Небольшой пример верстки
+
+4 Каков ваш уровень английского языка?
+-Базовый
