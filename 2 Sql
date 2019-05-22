@@ -39,7 +39,8 @@ create index x on #Source1(data)
 insert into #Source1 
 (idclient,idcountry1, 
 country1, 
-data) select s.cl,s.id_country,s.country, s.data from (select list_clients.list_c as cl,countries.country, countries.id_country, pay.date_pay as data 
+data) select s.cl,s.id_country,s.country, s.data 
+from (select list_clients.list_c as cl,countries.country, countries.id_country, pay.date_pay as data 
 from countries join (resorts join (hostels join (tours join (pay join list_clients on list_clients.list_pay=pay.id_pay) on pay.pay_tour=tours.id_tour) on tours.host_tour=hostels.id_host) on hostels.res_host=resorts.id_res) on resorts.с_res=countries.id_country 
 ) s 
 
@@ -50,7 +51,11 @@ idcountry1 int,country1 VARCHAR(60),country2 VARCHAR(60),kolvo int)
 
 --Список полетев из страны1 в страну2 
 insert into #Source2 
-(idcountry1,country1 ,country2 ,kolvo ) select s.idcountry1,s.country1,cnrt.country,count(*) as count1 from #Source1 s,countries cnrt where id_country=(Select top(1) s2.idcountry1 from #Source1 s2 where s2.data=(select MIN(s3.data) from #Source1 s3 where s.idcountry1=s3.idcountry1 and s3.data>s.data and s3.idclient=s.idclient)) group by s.idcountry1,s.country1,cnrt.country 
+(idcountry1,country1 ,country2 ,kolvo ) select s.idcountry1,s.country1,cnrt.country,count(*) as count1 
+from #Source1 s,countries cnrt where id_country=
+(Select top(1) s2.idcountry1 from #Source1 s2 where s2.data=(select MIN(s3.data) 
+from #Source1 s3 where s.idcountry1=s3.idcountry1 and s3.data>s.data and s3.idclient=s.idclient)) 
+group by s.idcountry1,s.country1,cnrt.country 
 
 create table #Source3 ( 
 idcountry1 int,country1 VARCHAR(60),country2 VARCHAR(60),kolvo int) 
@@ -59,7 +64,9 @@ while (@i<=(select count(countries.id_country) from countries))
 begin 
 --Макс. количество полетов по стране1 
 insert into #Source3 
-(idcountry1,country1 ,country2 ,kolvo ) select idcountry1,s1.country1 ,s1.country2 ,s1.kolvo from #Source2 s1 where s1.idcountry1=@i and kolvo=(select MAX(kolvo) from #Source2 s2 where s2.country1=s1.country1) 
+(idcountry1,country1 ,country2 ,kolvo ) select idcountry1,
+s1.country1 ,s1.country2,s1.kolvo from #Source2 s1 where s1.idcountry1=@i
+and kolvo=(select MAX(kolvo) from #Source2 s2 where s2.country1=s1.country1) 
 set @i=@i+1 
 end 
 
@@ -76,3 +83,13 @@ idcountry1	Страна1	       Страна2		Кол-во
 2		      ТАЙЛАНД        ИНДОНЕЗИЯ	  142
 3		      США            ИСПАНИЯ	    142
 */
+
+
+3)PostgteSQL
+
+Добавляем почтовый индекс из таблицы index в таблицу city, если в city нет индекса
+
+UPDATE city ci SET "POSTALCODE"=(SELECT "index"."INDEX" FROM "index" 
+where LOWER(SPLIT_PART("index"."REGION",' ',1))=(SELECT LOWER(r."FORMALNAME") 
+from region r where ci."REGIONCODE"=r."REGIONCODE") and 
+LOWER(ci."FORMALNAME")=LOWER(SPLIT_PART("index"."OPSNAME", ' ',1)) LIMIT 1) where (ci."POSTALCODE"='0' or ci."POSTALCODE" is null)
