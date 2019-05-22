@@ -1,0 +1,69 @@
+<style>
+    .inp
+    {
+        display: none;
+        visibility: hidden;
+    }
+    .divChecker
+    {
+        width: 80px;
+        height: 30px;
+        background: white;
+        border-radius: 20px;
+        position: relative;
+        border: 3px solid #5294ff;
+      
+    }
+    .divChecker:hover
+    {
+        box-shadow:0 0 15px #00aaff;
+
+    }
+    .divChecker .image
+    {
+        background-image: url("icons8-гараж-открыт-48.png");
+        background-color: #5294ff;
+        background-size: 25px;
+        background-repeat: no-repeat;
+        background-position: center;
+        width: 30px;
+        height: 30px;
+        position: absolute;
+        top: -1px;
+        left: -1px;
+        border-radius: 50%;
+        border:1px solid lightgrey;
+        transition: all 0.4s;
+
+    }
+    .inp:checked ~ .divChecker .image
+       {
+           background-image: url("icons8-дверь-80.png");
+           margin-left: 60%;
+        border:1px solid lightgrey;
+
+        right: 0;
+
+       }
+    .inp:checked ~ .divChecker
+    {
+        background-color: #5294ff;
+    }
+    .text:after
+    {
+        content: 'До склада';
+    }
+    .inp:checked + .text:after
+    {
+        content: 'До двери';
+    }
+</style>
+
+<label class="inpLable">
+
+    <input class="inp" type="checkbox">
+<label class="text"></label>
+    <div class="divChecker">
+        <div class="image"></div>
+    </div>
+</label>
