@@ -1,5 +1,5 @@
-Виджет Yii2 для выбора города из БД
- 
+Select1One - виджет на Yii2 для выбора города из БД
+Пример полученяи данных в контроллере
  public function actionGorod()
     {
         if(\Yii::$app->request->isAjax && isset($_POST['q'])) {
