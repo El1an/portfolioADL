@@ -1,0 +1,9 @@
+ public function actionGorod()
+    {
+        if(\Yii::$app->request->isAjax && isset($_POST['q'])) {
+            $list_data = City::find()->joinWith('parent', true, 'FULL JOIN')
+                ->where(['like', 'UPPER(city.name)', mb_convert_case(trim($_POST['q']), MB_CASE_UPPER, "UTF-8").'%', false])
+                ->asArray()->limit(100)->all();
+            return json_encode($list_data);
+        }
+    }
